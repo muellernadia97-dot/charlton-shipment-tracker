@@ -220,8 +220,6 @@ h1{font-size:18px;font-weight:500;color:#fff;letter-spacing:-0.3px}
 <script>
 const SHEETS_KEY = 'AIzaSyD1aXZwA7bsxMYjYq465UoxvruwmX2uw10';
 const SHEET_ID   = '17cRJs6LPWmqPfGh3M3Frsdjipcix5iVA';
-const JSONBIN_KEY= '$2a$10$8k/FFS8g3eUYZAhoEAk8R..d2gXZ7U55cOi6okeg05KLslsyEM.12';
-const JSONBIN_URL= 'https://api.jsonbin.io/v3/b';
 
 let STYLES = [];
 let binId  = null;
@@ -310,57 +308,31 @@ function parseCSV(text){
   return rows;
 }
 
+// Using jsonstore.io — free, no API key needed
+const STORE_URL = 'https://www.jsonstore.io/8f2a3b4c9d1e6f7a8b9c0d1e2f3a4b5c6d7e8f9a/charlton-tracking';
+
 async function loadCloud(){
-  const s = localStorage.getItem('charlton_bin_id');
-  if(s) binId = s;
-  if(binId){
-    try{
-      const res = await fetch(`${JSONBIN_URL}/${binId}/latest`,{
-        headers:{'X-Master-Key':JSONBIN_KEY}
-      });
-      if(res.ok){
-        const d = await res.json();
-        if(d.record){ cloudData = d.record; return; }
-      }
-    }catch(e){}
-    binId = null;
-    localStorage.removeItem('charlton_bin_id');
-  }
   try{
-    const res = await fetch(JSONBIN_URL,{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'X-Master-Key':JSONBIN_KEY,
-        'X-Bin-Name':'charlton-tracking',
-        'X-Bin-Private':'false'
-      },
-      body:JSON.stringify({tracking:{}})
-    });
+    const res = await fetch(STORE_URL);
     if(res.ok){
       const d = await res.json();
-      if(d.metadata?.id){
-        binId=d.metadata.id;
-        localStorage.setItem('charlton_bin_id',binId);
-        cloudData={};
-        console.log('Created new bin:',binId);
-        return;
-      }
-    } else {
-      const err = await res.text();
-      console.log('JSONBin create error:',res.status,err);
+      if(d && d.result){ cloudData = d.result; console.log('Cloud data loaded'); return; }
     }
-  }catch(e){ console.log('JSONBin exception:',e.message); }
-  cloudData=JSON.parse(localStorage.getItem('charlton_fallback')||'{}');
+  }catch(e){ console.log('Load error:',e.message); }
+  cloudData = JSON.parse(localStorage.getItem('charlton_fallback')||'{}');
 }
 
 async function saveCloud(){
-  if(!binId){ localStorage.setItem('charlton_fallback',JSON.stringify(cloudData)); return; }
+  // Save locally always as backup
+  localStorage.setItem('charlton_fallback', JSON.stringify(cloudData));
   try{
-    await fetch(`${JSONBIN_URL}/${binId}`,{method:'PUT',
-      headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_KEY},
-      body:JSON.stringify(cloudData)});
-  }catch(e){ localStorage.setItem('charlton_fallback',JSON.stringify(cloudData)); }
+    await fetch(STORE_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(cloudData)
+    });
+    console.log('Cloud saved');
+  }catch(e){ console.log('Save error:',e.message); }
 }
 
 function showErr(msg){
