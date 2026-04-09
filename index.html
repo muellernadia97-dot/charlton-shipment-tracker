@@ -100,34 +100,43 @@ h1{font-size:18px;font-weight:500;color:#fff;letter-spacing:-0.3px}
 
 <div class="content" id="main-content"></div>
 
-<!-- Fabric / Trims modal -->
-<div class="modal-overlay" id="modal-ft">
+<!-- Fabric modal -->
+<div class="modal-overlay" id="modal-fab">
   <div class="modal">
     <div class="modal-handle"></div>
-    <h2 id="ft-title">Add tracking</h2>
-    <div class="modal-sub" id="ft-sub"></div>
-    <div class="field"><label>Carrier</label>
-      <select id="ft-carrier">
-        <option>DHL</option><option>FedEx</option><option>UPS</option>
-        <option>TNT</option><option>Japan Post</option><option>China Post</option>
-        <option>SF Express</option><option>EMS</option>
-      </select>
-    </div>
-    <div class="field"><label>Tracking number</label><input id="ft-track" placeholder="Enter tracking number"></div>
-    <div class="field"><label>Status</label>
-      <select id="ft-status">
-        <option value="ordered">Ordered</option>
-        <option value="transit">In Transit</option>
-        <option value="customs">In Customs</option>
-        <option value="delivery">Out for Delivery</option>
-        <option value="delivered">Delivered</option>
-      </select>
-    </div>
-    <div class="field"><label>ETA</label><input id="ft-eta" type="date"></div>
-    <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeModal('modal-ft')">Cancel</button>
-      <button class="btn-save" onclick="saveFT()">Save</button>
-    </div>
+    <h2 id="fab-title">Fabric tracking</h2>
+    <div class="modal-sub" id="fab-sub"></div>
+    <div class="section-divider">Sampling</div>
+    <div class="field"><label>Carrier</label><select id="fab-samp-carrier"><option>DHL</option><option>FedEx</option><option>UPS</option><option>TNT</option><option>Japan Post</option><option>China Post</option><option>SF Express</option><option>EMS</option></select></div>
+    <div class="field"><label>Tracking number</label><input id="fab-samp-track" placeholder="Enter tracking number"></div>
+    <div class="field"><label>Status</label><select id="fab-samp-status"><option value="">— Not ordered yet —</option><option value="ordered">Ordered</option><option value="transit">In Transit</option><option value="customs">In Customs</option><option value="delivery">Out for Delivery</option><option value="delivered">Delivered</option></select></div>
+    <div class="field"><label>ETA</label><input id="fab-samp-eta" type="date"></div>
+    <div class="section-divider">Bulk</div>
+    <div class="field"><label>Carrier</label><select id="fab-bulk-carrier"><option>DHL</option><option>FedEx</option><option>UPS</option><option>TNT</option><option>Japan Post</option><option>China Post</option><option>SF Express</option><option>EMS</option></select></div>
+    <div class="field"><label>Tracking number</label><input id="fab-bulk-track" placeholder="Enter tracking number"></div>
+    <div class="field"><label>Status</label><select id="fab-bulk-status"><option value="">— Not ordered yet —</option><option value="ordered">Ordered</option><option value="transit">In Transit</option><option value="customs">In Customs</option><option value="delivery">Out for Delivery</option><option value="delivered">Delivered</option></select></div>
+    <div class="field"><label>ETA</label><input id="fab-bulk-eta" type="date"></div>
+    <div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-fab')">Cancel</button><button class="btn-save" onclick="saveFabric()">Save</button></div>
+  </div>
+</div>
+
+<!-- Trims modal -->
+<div class="modal-overlay" id="modal-trim">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="trim-title">Trim tracking</h2>
+    <div class="modal-sub" id="trim-sub"></div>
+    <div class="section-divider">Sampling</div>
+    <div class="field"><label>Carrier</label><select id="trim-samp-carrier"><option>DHL</option><option>FedEx</option><option>UPS</option><option>TNT</option><option>Japan Post</option><option>China Post</option><option>SF Express</option><option>EMS</option></select></div>
+    <div class="field"><label>Tracking number</label><input id="trim-samp-track" placeholder="Enter tracking number"></div>
+    <div class="field"><label>Status</label><select id="trim-samp-status"><option value="">— Not ordered yet —</option><option value="ordered">Ordered</option><option value="transit">In Transit</option><option value="customs">In Customs</option><option value="delivery">Out for Delivery</option><option value="delivered">Delivered</option></select></div>
+    <div class="field"><label>ETA</label><input id="trim-samp-eta" type="date"></div>
+    <div class="section-divider">Bulk</div>
+    <div class="field"><label>Carrier</label><select id="trim-bulk-carrier"><option>DHL</option><option>FedEx</option><option>UPS</option><option>TNT</option><option>Japan Post</option><option>China Post</option><option>SF Express</option><option>EMS</option></select></div>
+    <div class="field"><label>Tracking number</label><input id="trim-bulk-track" placeholder="Enter tracking number"></div>
+    <div class="field"><label>Status</label><select id="trim-bulk-status"><option value="">— Not ordered yet —</option><option value="ordered">Ordered</option><option value="transit">In Transit</option><option value="customs">In Customs</option><option value="delivery">Out for Delivery</option><option value="delivered">Delivered</option></select></div>
+    <div class="field"><label>ETA</label><input id="trim-bulk-eta" type="date"></div>
+    <div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-trim')">Cancel</button><button class="btn-save" onclick="saveTrim()">Save</button></div>
   </div>
 </div>
 
@@ -372,71 +381,89 @@ function render(){
   let html = `<div class="filter-row">${filterHtml}</div>`;
 
   if(activeTab === 'fabric'){
-    const tracked = STYLES.filter(s=>d['fab__'+s.code]).length;
-    html += `<div class="section-meta">Fabric orders · ${tracked}/${STYLES.filter(s=>s.fabCode||s.fab).length} tracked</div>`;
     const fabStyles = filtered.filter(s=>s.fab||s.fabCode);
+    const tracked = fabStyles.filter(s=>{ const fd=d['fab__'+s.code]||{}; return fd.samp?.num||fd.bulk?.num; }).length;
+    html += `<div class="section-meta">Fabric orders · ${tracked}/${fabStyles.length} tracked</div>`;
     if(!fabStyles.length){ html+=`<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">No items for this filter</div>`; }
     fabStyles.forEach(s=>{
-      const key = 'fab__'+s.code;
-      const t = d[key];
-      const sm = t ? SM[t.status] : SM[''];
-      const isNew = !t;
-      html += `<div class="card ${isNew?'placeholder':''}">
-        <div class="item-img">${s.icon}</div>
-        <div class="item-info">
-          <div class="item-name">${s.fab||'Fabric'}</div>
-          <div class="item-sub">${s.fabCode||'—'} · ${s.code}</div>
-          <div class="tracking-row">
-            <div class="tracking-chip ${isNew?'empty':''}">${isNew?'No tracking yet':t.carrier+' · '+t.num}</div>
-            <span class="pill ${sm.cls}">${sm.label}</span>
+      const fd = d['fab__'+s.code]||{};
+      const samp = fd.samp||{};
+      const bulk = fd.bulk||{};
+      const hasAny = samp.num||bulk.num;
+      const shipRow = (label,t) => {
+        const sm = SM[t&&t.status?t.status:''];
+        const has = t&&t.num;
+        return `<div class="shipment-type">
+          <div class="type-label">${label}</div>
+          <div class="shipment-line">
+            <div class="shipment-chip ${has?'':'empty'}">${has?t.carrier+' · '+t.num:'No tracking yet'}</div>
+            <span class="pill ${sm.cls}" style="font-size:9px">${sm.label}</span>
+            ${has?`<button class="btn btn-track" style="padding:3px 8px;font-size:9px" onclick="track('${t.carrier}','${t.num}')">Track</button>`:''}
           </div>
-          <div class="progress-bar"><div class="progress-fill" style="width:${sm.progress}%;background:${sm.color}"></div></div>
-          <div class="eta-row">
-            <span class="eta">${isNew ? s.name : (t.eta?'ETA '+formatEta(t.eta):'ETA TBC')}</span>
-            <div class="action-btns">
-              ${isNew
-                ? `<button class="btn btn-add" onclick="openFT('${key}','Fabric — ${s.fab||s.code}')">+ Add tracking</button>`
-                : `<button class="btn btn-track" onclick="track('${t.carrier}','${t.num}')">Track</button>
-                   <button class="btn" onclick="editFT('${key}','Fabric — ${s.fab||s.code}')">Edit</button>
-                   <button class="btn" onclick="removeFT('${key}')">Remove</button>`
-              }
-            </div>
+          ${has?`<div class="shipment-progress"><div class="shipment-fill" style="width:${sm.progress}%;background:${sm.color}"></div></div>
+          <div class="shipment-eta">${t.eta?'ETA '+formatEta(t.eta):''}</div>`:''}
+        </div>`;
+      };
+      html += `<div class="sample-card">
+        <div class="sample-header">
+          <div class="sample-icon">${s.icon}</div>
+          <div class="sample-title">
+            <div class="sample-name">${s.fab||'Fabric'}</div>
+            <div class="sample-code">${s.fabCode||'—'} · ${s.code}</div>
+            <div class="sample-factory">${s.name}</div>
           </div>
+          <button class="btn btn-add" style="flex-shrink:0" onclick="openFabric('${s.code}','${(s.fab||s.code).replace(/'/g,"\\'")}')">
+            ${hasAny?'Edit':'+ Add'}
+          </button>
+        </div>
+        <div class="shipment-rows">
+          ${shipRow('Sampling',samp)}
+          <div class="type-divider"></div>
+          ${shipRow('Bulk',bulk)}
         </div>
       </div>`;
     });
 
   } else if(activeTab === 'trims'){
     const trimStyles = filtered.filter(s=>s.trim||s.trimCode);
-    const tracked = STYLES.filter(s=>(s.trim||s.trimCode)&&d['trim__'+s.code]).length;
-    html += `<div class="section-meta">Trim orders · ${tracked}/${STYLES.filter(s=>s.trim||s.trimCode).length} tracked</div>`;
+    const tracked = trimStyles.filter(s=>{ const td=d['trim__'+s.code]||{}; return td.samp?.num||td.bulk?.num; }).length;
+    html += `<div class="section-meta">Trim orders · ${tracked}/${trimStyles.length} tracked</div>`;
     if(!trimStyles.length){ html+=`<div style="text-align:center;padding:40px;color:#aaa;font-size:13px">No items for this filter</div>`; }
     trimStyles.forEach(s=>{
-      const key = 'trim__'+s.code;
-      const t = d[key];
-      const sm = t ? SM[t.status] : SM[''];
-      const isNew = !t;
-      html += `<div class="card ${isNew?'placeholder':''}">
-        <div class="item-img">🔘</div>
-        <div class="item-info">
-          <div class="item-name">${s.trimCode||s.trim||'Trim'}</div>
-          <div class="item-sub">${s.trimCode||'—'} · ${s.code}</div>
-          <div class="tracking-row">
-            <div class="tracking-chip ${isNew?'empty':''}">${isNew?'No tracking yet':t.carrier+' · '+t.num}</div>
-            <span class="pill ${sm.cls}">${sm.label}</span>
+      const td = d['trim__'+s.code]||{};
+      const samp = td.samp||{};
+      const bulk = td.bulk||{};
+      const hasAny = samp.num||bulk.num;
+      const shipRow = (label,t) => {
+        const sm = SM[t&&t.status?t.status:''];
+        const has = t&&t.num;
+        return `<div class="shipment-type">
+          <div class="type-label">${label}</div>
+          <div class="shipment-line">
+            <div class="shipment-chip ${has?'':'empty'}">${has?t.carrier+' · '+t.num:'No tracking yet'}</div>
+            <span class="pill ${sm.cls}" style="font-size:9px">${sm.label}</span>
+            ${has?`<button class="btn btn-track" style="padding:3px 8px;font-size:9px" onclick="track('${t.carrier}','${t.num}')">Track</button>`:''}
           </div>
-          <div class="progress-bar"><div class="progress-fill" style="width:${sm.progress}%;background:${sm.color}"></div></div>
-          <div class="eta-row">
-            <span class="eta">${isNew ? s.name : (t.eta?'ETA '+formatEta(t.eta):'ETA TBC')}</span>
-            <div class="action-btns">
-              ${isNew
-                ? `<button class="btn btn-add" onclick="openFT('${key}','Trims — ${s.trimCode||s.code}')">+ Add tracking</button>`
-                : `<button class="btn btn-track" onclick="track('${t.carrier}','${t.num}')">Track</button>
-                   <button class="btn" onclick="editFT('${key}','Trims — ${s.trimCode||s.code}')">Edit</button>
-                   <button class="btn" onclick="removeFT('${key}')">Remove</button>`
-              }
-            </div>
+          ${has?`<div class="shipment-progress"><div class="shipment-fill" style="width:${sm.progress}%;background:${sm.color}"></div></div>
+          <div class="shipment-eta">${t.eta?'ETA '+formatEta(t.eta):''}</div>`:''}
+        </div>`;
+      };
+      html += `<div class="sample-card">
+        <div class="sample-header">
+          <div class="sample-icon">🔘</div>
+          <div class="sample-title">
+            <div class="sample-name">${s.trimCode||s.trim||'Trim'}</div>
+            <div class="sample-code">${s.trimCode||'—'} · ${s.code}</div>
+            <div class="sample-factory">${s.name}</div>
           </div>
+          <button class="btn btn-add" style="flex-shrink:0" onclick="openTrim('${s.code}','${(s.trimCode||s.code).replace(/'/g,"\\'")}')">
+            ${hasAny?'Edit':'+ Add'}
+          </button>
+        </div>
+        <div class="shipment-rows">
+          ${shipRow('Sampling',samp)}
+          <div class="type-divider"></div>
+          ${shipRow('Bulk',bulk)}
         </div>
       </div>`;
     });
@@ -495,39 +522,60 @@ function render(){
   document.getElementById('main-content').innerHTML = html;
 }
 
-/* Fabric / Trims modal */
-function openFT(key, label){
-  currentFTKey = key;
-  document.getElementById('ft-title').textContent = 'Add tracking';
-  document.getElementById('ft-sub').textContent = label;
-  document.getElementById('ft-track').value = '';
-  document.getElementById('ft-status').value = 'ordered';
-  document.getElementById('ft-eta').value = '';
-  document.getElementById('modal-ft').classList.add('open');
-}
-function editFT(key, label){
-  const d = getData();
-  const t = d[key]||{};
-  currentFTKey = key;
-  document.getElementById('ft-title').textContent = 'Edit tracking';
-  document.getElementById('ft-sub').textContent = label;
-  document.getElementById('ft-carrier').value = t.carrier||'DHL';
-  document.getElementById('ft-track').value = t.num||'';
-  document.getElementById('ft-status').value = t.status||'ordered';
-  document.getElementById('ft-eta').value = t.eta||'';
-  document.getElementById('modal-ft').classList.add('open');
-}
-function removeFT(key){ const d=getData(); delete d[key]; setData(d); render(); }
-function saveFT(){
-  const num = document.getElementById('ft-track').value.trim();
-  if(!num){ alert('Please enter a tracking number.'); return; }
-  const d = getData();
-  d[currentFTKey] = {
-    carrier: document.getElementById('ft-carrier').value,
-    num, status: document.getElementById('ft-status').value,
-    eta: document.getElementById('ft-eta').value
+/* Fabric modal */
+let currentFabCode = null;
+function openFabric(code, label){
+  currentFabCode = code;
+  const fd = getData()['fab__'+code]||{};
+  document.getElementById('fab-title').textContent = 'Fabric tracking';
+  document.getElementById('fab-sub').textContent = label+' · '+code;
+  const fill = (p,t) => {
+    document.getElementById('fab-'+p+'-carrier').value = t?.carrier||'DHL';
+    document.getElementById('fab-'+p+'-track').value   = t?.num||'';
+    document.getElementById('fab-'+p+'-status').value  = t?.status||'';
+    document.getElementById('fab-'+p+'-eta').value     = t?.eta||'';
   };
-  setData(d); closeModal('modal-ft'); render();
+  fill('samp', fd.samp); fill('bulk', fd.bulk);
+  document.getElementById('modal-fab').classList.add('open');
+}
+function saveFabric(){
+  const d = getData();
+  const get = p => {
+    const num = document.getElementById('fab-'+p+'-track').value.trim();
+    const status = document.getElementById('fab-'+p+'-status').value;
+    if(!num&&!status) return null;
+    return { carrier:document.getElementById('fab-'+p+'-carrier').value, num, status, eta:document.getElementById('fab-'+p+'-eta').value };
+  };
+  d['fab__'+currentFabCode] = { samp:get('samp'), bulk:get('bulk') };
+  setData(d); closeModal('modal-fab'); render();
+}
+
+/* Trims modal */
+let currentTrimCode = null;
+function openTrim(code, label){
+  currentTrimCode = code;
+  const td = getData()['trim__'+code]||{};
+  document.getElementById('trim-title').textContent = 'Trim tracking';
+  document.getElementById('trim-sub').textContent = label+' · '+code;
+  const fill = (p,t) => {
+    document.getElementById('trim-'+p+'-carrier').value = t?.carrier||'DHL';
+    document.getElementById('trim-'+p+'-track').value   = t?.num||'';
+    document.getElementById('trim-'+p+'-status').value  = t?.status||'';
+    document.getElementById('trim-'+p+'-eta').value     = t?.eta||'';
+  };
+  fill('samp', td.samp); fill('bulk', td.bulk);
+  document.getElementById('modal-trim').classList.add('open');
+}
+function saveTrim(){
+  const d = getData();
+  const get = p => {
+    const num = document.getElementById('trim-'+p+'-track').value.trim();
+    const status = document.getElementById('trim-'+p+'-status').value;
+    if(!num&&!status) return null;
+    return { carrier:document.getElementById('trim-'+p+'-carrier').value, num, status, eta:document.getElementById('trim-'+p+'-eta').value };
+  };
+  d['trim__'+currentTrimCode] = { samp:get('samp'), bulk:get('bulk') };
+  setData(d); closeModal('modal-trim'); render();
 }
 
 /* Samples modal */
